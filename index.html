@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<!-- iOS 主屏幕 App 模式支持 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="经验追踪">
+<!-- 主屏幕图标：发布时与本文件放在同一目录 -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png">
+<title>游戏经验追踪 - 从零开始</title>
+<style>
+:root {
+  --bg: #0f0f1a;
+  --card: #1a1a2e;
+  --card2: #16213e;
+  --text: #e8e8e8;
+  --text2: #a0a0b0;
+  --accent: #00d4ff;
+  --accent2: #ff6b6b;
+  --win: #00d9a5;
+  --fast: #6bcb77;
+  --lose: #ff6b6b;
+  --border: #2a2a40;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding-bottom: 100px;
+}
+.container { max-width: 430px; margin: 0 auto; padding: 16px; }
+
+.header { text-align: center; padding: 12px 0 20px; }
+.header h1 { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+.header .subtitle { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+.countdown-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.countdown-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(0,212,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.countdown-label { font-size: 12px; color: var(--text2); text-transform: uppercase; letter-spacing: 2px; }
+.countdown-time { font-size: 32px; font-weight: 800; color: var(--accent); margin: 8px 0; font-variant-numeric: tabular-nums; }
+.countdown-end { font-size: 12px; color: var(--text2); }
+
+.progress-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.level-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.level-box { text-align: center; }
+.level-num { font-size: 28px; font-weight: 800; color: var(--accent); }
+.level-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.level-arrow { font-size: 20px; color: var(--text2); }
+
+.progress-track {
+  height: 12px;
+  background: var(--card2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  position: relative;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff, #00d9a5);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 20px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+  border-radius: 0 6px 6px 0;
+}
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 8px;
+  text-align: center;
+}
+.stat-icon { font-size: 20px; margin-bottom: 6px; }
+.stat-value { font-size: 22px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 11px; color: var(--text2); margin-top: 4px; }
+.stat-box.danger .stat-value { color: var(--accent2); }
+
+/* Mode Efficiency */
+.eff-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.eff-hint { margin-left: auto; font-size: 11px; color: var(--accent); font-weight: 600; }
+.eff-row { padding: 10px 0; }
+.eff-row + .eff-row { border-top: 1px solid var(--border); }
+.eff-mode { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.eff-sub { font-size: 11px; color: var(--text2); font-weight: 400; margin-left: 6px; }
+.eff-vals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.eff-item { text-align: center; background: var(--card2); border-radius: 10px; padding: 8px 4px; }
+.eff-num { display: block; font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.eff-num.better { color: #ffd93d; }
+.eff-lab { display: block; font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+.action-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 18px 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.btn:active { transform: scale(0.95); }
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 40%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+  pointer-events: none;
+}
+.btn-win { background: linear-gradient(135deg, #00b894, #00d9a5); }
+.btn-fast { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+.btn-lose { background: linear-gradient(135deg, #ff7675, #d63031); }
+.btn-fast-lose { background: linear-gradient(135deg, #e17055, #d63031); }
+.btn .exp { font-size: 20px; font-weight: 800; }
+.btn .label { font-size: 12px; opacity: 0.9; font-weight: 600; }
+
+/* Daily Stats */
+.daily-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.daily-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.daily-title { font-size: 14px; font-weight: 600; color: var(--text2); }
+.daily-avg { font-size: 12px; color: var(--accent); }
+.daily-list { max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.daily-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.daily-item:last-child { border-bottom: none; }
+.daily-date {
+  width: 52px;
+  font-size: 13px;
+  color: var(--text2);
+  flex-shrink: 0;
+  text-align: center;
+}
+.daily-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.daily-bar-bg {
+  height: 8px;
+  background: var(--card2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.daily-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff, #00d9a5);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 2px;
+}
+.daily-bar-fill.over {
+  background: linear-gradient(90deg, #ffd93d, #f39c12);
+}
+.daily-info {
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+.daily-exp { font-size: 14px; font-weight: 700; color: var(--text); }
+.daily-count { font-size: 11px; color: var(--text2); }
+.daily-empty {
+  text-align: center;
+  color: var(--text2);
+  padding: 20px;
+  font-size: 13px;
+}
+
+.history-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.history-title { font-size: 14px; font-weight: 600; color: var(--text2); }
+.history-clear {
+  font-size: 12px;
+  color: var(--accent2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.history-list {
+  max-height: 240px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.history-item:last-child { border-bottom: none; }
+.history-left { display: flex; align-items: center; gap: 10px; }
+.history-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.history-info { display: flex; flex-direction: column; }
+.history-type { font-size: 14px; font-weight: 600; }
+.history-time { font-size: 11px; color: var(--text2); }
+.history-exp { font-size: 15px; font-weight: 700; }
+.history-exp.pos { color: var(--win); }
+.history-exp.neg { color: var(--lose); }
+.history-del {
+  background: none;
+  border: none;
+  color: var(--text2);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 8px;
+  margin-left: 4px;
+}
+
+.settings-toggle {
+  text-align: center;
+  padding: 8px 0 20px;
+}
+.settings-toggle button {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.settings-panel {
+  display: none;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.settings-panel.active { display: block; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 15px;
+  -webkit-appearance: none;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.btn-save {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), #00d9a5);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.btn-reset {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--accent2);
+  border-radius: 12px;
+  color: var(--accent2);
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.btn-data {
+  width: 100%;
+  padding: 12px;
+  background: var(--card2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+  z-index: 1000;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.float-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(15,15,26,0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+}
+.float-bar .info { display: flex; flex-direction: column; }
+.float-bar .info .top { font-size: 13px; color: var(--text2); }
+.float-bar .info .bot { font-size: 18px; font-weight: 800; color: var(--accent); }
+.float-bar .btn-quick {
+  background: linear-gradient(135deg, var(--accent), #00d9a5);
+  border: none;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>🎮 经验追踪器</h1>
+    <div class="subtitle" id="headerSubtitle">初始: Lv.44 (0/1000) → 目标: Lv.100</div>
+  </div>
+
+  <div class="countdown-card">
+    <div class="countdown-label">⏰ 活动结束倒计时</div>
+    <div class="countdown-time" id="countdown">计算中...</div>
+    <div class="countdown-end" id="countdownEnd">截止 -</div>
+  </div>
+
+  <div class="progress-card">
+    <div class="level-row">
+      <div class="level-box">
+        <div class="level-num" id="dispCurrent">44</div>
+        <div class="level-label">当前等级</div>
+      </div>
+      <div class="level-arrow">→</div>
+      <div class="level-box">
+        <div class="level-num" id="dispTarget">100</div>
+        <div class="level-label">目标等级</div>
+      </div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar" style="width:0%"></div>
+    </div>
+    <div class="progress-info">
+      <span id="progressText">已获取 0 / 56,000</span>
+      <span id="progressPct">0%</span>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div class="stat-icon">📅</div>
+      <div class="stat-value" id="daysLeft">-</div>
+      <div class="stat-label">剩余天数</div>
+    </div>
+    <div class="stat-box danger">
+      <div class="stat-icon">🎯</div>
+      <div class="stat-value" id="dailyNeeded">-</div>
+      <div class="stat-label">日均需获取</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-icon">📈</div>
+      <div class="stat-value" id="todayEarned">-</div>
+      <div class="stat-label">今日已获取</div>
+    </div>
+  </div>
+
+  <div class="eff-card">
+    <div class="section-title">⚖️ 模式效率分析<span class="eff-hint" id="effHint"></span></div>
+    <div class="eff-row">
+      <div class="eff-mode">🏆 普通模式<span class="eff-sub" id="effNormalGames"></span></div>
+      <div class="eff-vals">
+        <div class="eff-item"><span class="eff-num" id="effNormalWr">-</span><span class="eff-lab">调整后胜率</span></div>
+        <div class="eff-item"><span class="eff-num" id="effNormalExp">-</span><span class="eff-lab">场均经验</span></div>
+        <div class="eff-item"><span class="eff-num" id="effNormalMin">-</span><span class="eff-lab">经验/分钟</span></div>
+      </div>
+    </div>
+    <div class="eff-row">
+      <div class="eff-mode">⚡ 加速模式<span class="eff-sub" id="effFastGames"></span></div>
+      <div class="eff-vals">
+        <div class="eff-item"><span class="eff-num" id="effFastWr">-</span><span class="eff-lab">调整后胜率</span></div>
+        <div class="eff-item"><span class="eff-num" id="effFastExp">-</span><span class="eff-lab">场均经验</span></div>
+        <div class="eff-item"><span class="eff-num" id="effFastMin">-</span><span class="eff-lab">经验/分钟</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-section">
+    <div class="section-title">⚡ 快速记录对局</div>
+    <div class="btn-grid">
+      <button class="btn btn-win" onclick="addExp('win')">
+        <span class="exp" id="btnExpWin">+650</span>
+        <span class="label">🏆 普通胜利</span>
+      </button>
+      <button class="btn btn-lose" onclick="addExp('lose')">
+        <span class="exp" id="btnExpLose">+250</span>
+        <span class="label">💔 普通失败</span>
+      </button>
+      <button class="btn btn-fast" onclick="addExp('fast')">
+        <span class="exp" id="btnExpFast">+425</span>
+        <span class="label">⚡ 加速胜利</span>
+      </button>
+      <button class="btn btn-fast-lose" onclick="addExp('fastLose')">
+        <span class="exp" id="btnExpFastLose">+175</span>
+        <span class="label">🌀 加速失败</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Daily Stats Board -->
+  <div class="daily-card">
+    <div class="daily-header">
+      <span class="daily-title">📊 每日统计</span>
+      <span class="daily-avg" id="dailyAvgLabel">日均: -</span>
+    </div>
+    <div class="daily-list" id="dailyList">
+      <div class="daily-empty">暂无历史数据</div>
+    </div>
+  </div>
+
+  <div class="history-card">
+    <div class="history-header">
+      <span class="history-title">📜 今日记录</span>
+      <button class="history-clear" onclick="clearToday()">清空今日</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div style="text-align:center;color:var(--text2);padding:20px;font-size:13px;">暂无记录</div>
+    </div>
+  </div>
+
+  <div class="settings-toggle">
+    <button onclick="toggleSettings()">⚙️ 修改参数</button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <div class="form-row">
+      <div class="form-group">
+        <label>当前等级</label>
+        <input type="number" id="setCurrent" value="44">
+      </div>
+      <div class="form-group">
+        <label>当前等级内经验</label>
+        <input type="number" id="setCurrentExp" value="0">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>目标等级</label>
+        <input type="number" id="setTarget" value="100">
+      </div>
+      <div class="form-group">
+        <label>每级经验</label>
+        <input type="number" id="setPerLevel" value="1000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>活动结束时间</label>
+      <input type="datetime-local" id="setEndTime">
+    </div>
+    <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+    <div class="form-group">
+      <label>基础胜率（%）— 没有记录时的预估胜率</label>
+      <input type="number" id="setBaseWr" value="50" min="0" max="100" step="0.1">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>普通模式场均时长（分钟）</label>
+        <input type="number" id="setAvgNormalMin" value="40" min="1">
+      </div>
+      <div class="form-group">
+        <label>加速模式场均时长（分钟）</label>
+        <input type="number" id="setAvgFastMin" value="20" min="1">
+      </div>
+    </div>
+    <button class="btn-save" onclick="saveSettings()">💾 保存设置</button>
+    <div style="height:1px;background:var(--border);margin:16px 0;"></div>
+    <div class="form-row">
+      <button class="btn-data" onclick="exportData()">📤 导出数据</button>
+      <button class="btn-data" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+    </div>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)">
+    <button class="btn-reset" onclick="resetAll()">🗑️ 清空所有数据</button>
+  </div>
+</div>
+
+<div class="float-bar">
+  <div class="info">
+    <span class="top">今日还需</span>
+    <span class="bot" id="floatNeed">-</span>
+  </div>
+  <button class="btn-quick" onclick="scrollToTop()">回到顶部</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE = 'expTrackerZero_v1';
+let data = loadData();
+
+function loadData() {
+  const raw = localStorage.getItem(STORAGE);
+  if (raw) {
+    const d = JSON.parse(raw);
+    // 修正历史遗留的无效截止时间（如被旧版兜底逻辑覆盖成的过期日期无法判断，
+    // 但空值/无法解析的值统一清理，让界面显示"未设置"而不是 NaN 或误判结束）
+    const end = parseEndTime(d.endTime);
+    d.endTime = end ? formatLocalInput(end) : '';
+    // 旧数据补充新增字段的默认值
+    if (typeof d.baseWinRate !== 'number') d.baseWinRate = 50;
+    if (typeof d.avgNormalMin !== 'number') d.avgNormalMin = 40;
+    if (typeof d.avgFastMin !== 'number') d.avgFastMin = 20;
+    return d;
+  }
+  return {
+    startLevel: 44,
+    startExpInLevel: 0,
+    targetLevel: 100,
+    expPerLevel: 1000,
+    endTime: '2026-09-04T07:00',
+    expValues: { win: 650, lose: 250, fast: 425, fastLose: 175 },
+    baseWinRate: 50,
+    avgNormalMin: 40,
+    avgFastMin: 20,
+    history: []
+  };
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE, JSON.stringify(data));
+  render();
+}
+
+// 健壮地解析截止时间：兼容 'YYYY-MM-DDTHH:mm' / 'YYYY-MM-DDTHH:mm:ss'，
+// 手工按本地时间构造，避免部分移动端浏览器解析 ISO 字符串失败
+function parseEndTime(str) {
+  if (!str) return null;
+  const m = String(str).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (m) {
+    return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+  }
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// 格式化为 datetime-local 输入框可用的本地时间字符串
+function formatLocalInput(d) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function getStartTotalExp() {
+  return data.startLevel * data.expPerLevel + data.startExpInLevel;
+}
+
+function getTargetTotalExp() {
+  return data.targetLevel * data.expPerLevel;
+}
+
+function getTotalGap() {
+  return Math.max(0, getTargetTotalExp() - getStartTotalExp());
+}
+
+function getTotalEarned() {
+  return data.history.reduce((s, h) => s + h.exp, 0);
+}
+
+function getRemaining() {
+  return Math.max(0, getTotalGap() - getTotalEarned());
+}
+
+function getCurrentTotalExp() {
+  return getStartTotalExp() + getTotalEarned();
+}
+
+function getCurrentLevel() {
+  const total = getCurrentTotalExp();
+  return Math.floor(total / data.expPerLevel);
+}
+
+function getCurrentExpInLevel() {
+  const total = getCurrentTotalExp();
+  return total % data.expPerLevel;
+}
+
+function getDaysLeft() {
+  const end = parseEndTime(data.endTime);
+  if (!end) return 0;
+  const diff = end - new Date();
+  return diff > 0 ? diff / (1000 * 60 * 60 * 24) : 0;
+}
+
+function getTodayEarned() {
+  const todayStr = new Date().toDateString();
+  return data.history.filter(h => new Date(h.time).toDateString() === todayStr).reduce((s, h) => s + h.exp, 0);
+}
+
+function getTodayNeeded() {
+  const daysLeft = getDaysLeft();
+  if (daysLeft <= 0) return 0;
+  const remaining = getRemaining();
+  const daily = Math.ceil(remaining / daysLeft);
+  const todayEarned = getTodayEarned();
+  return Math.max(0, daily - todayEarned);
+}
+
+// 模式效率分析：
+// 调整后胜率 = (基础胜率 × 先验权重K + 实际胜场) / (K + 实际总场次)
+// 样本越少越接近基础胜率，样本越多越反映真实水平
+const PRIOR_K = 20;
+function getModeStats() {
+  const base = Math.min(100, Math.max(0, data.baseWinRate || 0)) / 100;
+  const m = { normal: { w: 0, l: 0 }, fast: { w: 0, l: 0 } };
+  data.history.forEach(h => {
+    if (h.type === 'win') m.normal.w++;
+    else if (h.type === 'lose') m.normal.l++;
+    else if (h.type === 'fast') m.fast.w++;
+    else if (h.type === 'fastLose') m.fast.l++;
+  });
+  function calc(mode, winExp, loseExp, avgMin) {
+    const n = mode.w + mode.l;
+    const wr = (base * PRIOR_K + mode.w) / (PRIOR_K + n);
+    const avgExp = wr * winExp + (1 - wr) * loseExp;
+    return { n, wr, avgExp, perMin: avgMin > 0 ? avgExp / avgMin : null };
+  }
+  return {
+    normal: calc(m.normal, data.expValues.win, data.expValues.lose, data.avgNormalMin || 0),
+    fast: calc(m.fast, data.expValues.fast, data.expValues.fastLose, data.avgFastMin || 0)
+  };
+}
+
+function addExp(type) {
+  const exp = data.expValues[type] || 0;
+  const now = new Date();
+  data.history.unshift({
+    time: now.toISOString(),
+    type: type,
+    exp: exp,
+    id: now.getTime()
+  });
+  saveData();
+  const typeNames = { win: '普通胜利', lose: '普通失败', fast: '加速胜利', fastLose: '加速失败' };
+  showToast(`+${exp} ${typeNames[type]}`);
+}
+
+function deleteRecord(id) {
+  data.history = data.history.filter(h => h.id !== id);
+  saveData();
+}
+
+function clearToday() {
+  const todayStr = new Date().toDateString();
+  data.history = data.history.filter(h => new Date(h.time).toDateString() !== todayStr);
+  saveData();
+  showToast('已清空今日记录');
+}
+
+function resetAll() {
+  if (confirm('确定要清空所有记录和设置吗？')) {
+    data.history = [];
+    data.startLevel = 0;
+    data.startExpInLevel = 0;
+    saveData();
+    showToast('已重置所有数据');
+  }
+}
+
+// 导出：把全部数据（设置 + 历史记录）下载为 JSON 备份文件
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  const p = n => String(n).padStart(2, '0');
+  const d = new Date();
+  a.href = URL.createObjectURL(blob);
+  a.download = `exp-tracker-backup-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  showToast('已导出备份文件');
+}
+
+// 导入：读取备份文件，校验后走 loadData 的迁移/规范化流程，旧版本备份也能安全导入
+function importData(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const d = JSON.parse(reader.result);
+      if (!d || typeof d !== 'object' || !Array.isArray(d.history) || typeof d.startLevel !== 'number') {
+        showToast('文件格式不正确');
+        return;
+      }
+      if (!d.expValues) d.expValues = { win: 650, lose: 250, fast: 425, fastLose: 175 };
+      localStorage.setItem(STORAGE, JSON.stringify(d));
+      data = loadData();
+      saveData();
+      updateCountdown();
+      showToast(`已导入 ${d.history.length} 条记录`);
+    } catch (e) {
+      showToast('导入失败：文件无法解析');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function toggleSettings() {
+  const p = document.getElementById('settingsPanel');
+  p.classList.toggle('active');
+  if (p.classList.contains('active')) {
+    document.getElementById('setCurrent').value = data.startLevel;
+    document.getElementById('setCurrentExp').value = data.startExpInLevel;
+    document.getElementById('setTarget').value = data.targetLevel;
+    document.getElementById('setPerLevel').value = data.expPerLevel;
+    const end = parseEndTime(data.endTime);
+    document.getElementById('setEndTime').value = end ? formatLocalInput(end) : '';
+    document.getElementById('setBaseWr').value = data.baseWinRate;
+    document.getElementById('setAvgNormalMin').value = data.avgNormalMin;
+    document.getElementById('setAvgFastMin').value = data.avgFastMin;
+  }
+}
+
+function saveSettings() {
+  data.startLevel = parseInt(document.getElementById('setCurrent').value) || 0;
+  data.startExpInLevel = parseInt(document.getElementById('setCurrentExp').value) || 0;
+  data.targetLevel = parseInt(document.getElementById('setTarget').value) || 100;
+  data.expPerLevel = parseInt(document.getElementById('setPerLevel').value) || 1000;
+
+  // 截止时间：只接受用户明确选中的有效新时间；
+  // 输入框为空或无效时保留原值，绝不再回退到硬编码的旧日期
+  const endInput = document.getElementById('setEndTime').value;
+  const parsedEnd = parseEndTime(endInput);
+  let endMsg = '';
+  if (endInput && parsedEnd) {
+    data.endTime = formatLocalInput(parsedEnd);
+  } else if (endInput && !parsedEnd) {
+    endMsg = '（截止时间格式无效，已保留原时间）';
+  } else if (!parseEndTime(data.endTime)) {
+    endMsg = '（未设置截止时间，请在设置中选择）';
+  } else {
+    endMsg = '（截止时间未修改）';
+  }
+
+  // 基础胜率：限定 0-100；场均时长：留空或无效则保持原值
+  const baseWr = parseFloat(document.getElementById('setBaseWr').value);
+  if (!isNaN(baseWr)) data.baseWinRate = Math.min(100, Math.max(0, baseWr));
+  const avgN = parseFloat(document.getElementById('setAvgNormalMin').value);
+  if (!isNaN(avgN) && avgN > 0) data.avgNormalMin = avgN;
+  const avgF = parseFloat(document.getElementById('setAvgFastMin').value);
+  if (!isNaN(avgF) && avgF > 0) data.avgFastMin = avgF;
+
+  saveData();
+  updateCountdown();
+  toggleSettings();
+  showToast('设置已保存' + endMsg);
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderDailyStats() {
+  const dailyMap = {};
+  data.history.forEach(h => {
+    const d = new Date(h.time);
+    const dateKey = d.toISOString().slice(0, 10);
+    if (!dailyMap[dateKey]) {
+      dailyMap[dateKey] = { exp: 0, count: 0, ts: d.getTime() };
+    }
+    dailyMap[dateKey].exp += h.exp;
+    dailyMap[dateKey].count += 1;
+  });
+
+  const sorted = Object.entries(dailyMap)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 14);
+
+  const list = document.getElementById('dailyList');
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="daily-empty">暂无历史数据</div>';
+    document.getElementById('dailyAvgLabel').textContent = '日均: -';
+    return;
+  }
+
+  const daysLeft = getDaysLeft();
+  const remaining = getRemaining();
+  const dailyNeeded = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : 0;
+  const maxExp = Math.max(...sorted.map(d => d[1].exp), dailyNeeded, 1);
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+
+  document.getElementById('dailyAvgLabel').textContent = '日均需: ' + dailyNeeded.toLocaleString();
+
+  list.innerHTML = sorted.map(([key, val]) => {
+    const d = new Date(val.ts);
+    const dateStr = (d.getMonth() + 1).toString().padStart(2, '0') + '/' + d.getDate().toString().padStart(2, '0');
+    const isToday = key === todayKey;
+    const pct = Math.min(100, (val.exp / maxExp) * 100);
+    const overDaily = dailyNeeded > 0 && val.exp >= dailyNeeded;
+    return `
+      <div class="daily-item">
+        <div class="daily-date">${dateStr}${isToday ? '<br><span style="font-size:10px;color:var(--accent)">今日</span>' : ''}</div>
+        <div class="daily-bar-wrap">
+          <div class="daily-bar-bg">
+            <div class="daily-bar-fill ${overDaily ? 'over' : ''}" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="daily-info">
+          <div class="daily-exp">+${val.exp.toLocaleString()}</div>
+          <div class="daily-count">${val.count}场</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function render() {
+  const totalGap = getTotalGap();
+  const totalEarned = getTotalEarned();
+  const remaining = getRemaining();
+  const daysLeft = getDaysLeft();
+  const dailyNeeded = daysLeft > 0 ? Math.ceil(remaining / daysLeft) : 0;
+  const todayEarned = getTodayEarned();
+  const todayNeeded = getTodayNeeded();
+  const currentLevel = getCurrentLevel();
+  const currentExpInLevel = getCurrentExpInLevel();
+  const targetTotal = getTargetTotalExp();
+  const currentTotal = getCurrentTotalExp();
+  const progress = targetTotal > 0 ? (currentTotal / targetTotal * 100) : 0;
+
+  document.getElementById('dispCurrent').textContent = currentLevel;
+  document.getElementById('dispTarget').textContent = data.targetLevel;
+  document.getElementById('progressBar').style.width = Math.min(100, progress) + '%';
+  document.getElementById('progressText').textContent = `已获取 ${totalEarned.toLocaleString()} / ${totalGap.toLocaleString()}`;
+  document.getElementById('progressPct').textContent = progress.toFixed(1) + '%';
+  document.getElementById('daysLeft').textContent = daysLeft > 0 ? daysLeft.toFixed(1) : '0';
+  document.getElementById('dailyNeeded').textContent = dailyNeeded.toLocaleString();
+  document.getElementById('todayEarned').textContent = todayEarned.toLocaleString();
+  document.getElementById('floatNeed').textContent = todayNeeded.toLocaleString();
+  document.getElementById('headerSubtitle').textContent = 
+    `初始: Lv.${data.startLevel} (${data.startExpInLevel}/${data.expPerLevel}) → 目标: Lv.${data.targetLevel}`;
+  document.getElementById('btnExpWin').textContent = '+' + data.expValues.win;
+  document.getElementById('btnExpLose').textContent = '+' + data.expValues.lose;
+  document.getElementById('btnExpFast').textContent = '+' + data.expValues.fast;
+  document.getElementById('btnExpFastLose').textContent = '+' + data.expValues.fastLose;
+
+  // 模式效率分析
+  const eff = getModeStats();
+  document.getElementById('effNormalGames').textContent = eff.normal.n + ' 场记录';
+  document.getElementById('effFastGames').textContent = eff.fast.n + ' 场记录';
+  document.getElementById('effNormalWr').textContent = (eff.normal.wr * 100).toFixed(1) + '%';
+  document.getElementById('effFastWr').textContent = (eff.fast.wr * 100).toFixed(1) + '%';
+  document.getElementById('effNormalExp').textContent = Math.round(eff.normal.avgExp).toLocaleString();
+  document.getElementById('effFastExp').textContent = Math.round(eff.fast.avgExp).toLocaleString();
+  document.getElementById('effNormalMin').textContent = eff.normal.perMin !== null ? eff.normal.perMin.toFixed(1) : '未设时长';
+  document.getElementById('effFastMin').textContent = eff.fast.perMin !== null ? eff.fast.perMin.toFixed(1) : '未设时长';
+
+  // 高亮效率更高的模式并给出提示
+  const nMin = document.getElementById('effNormalMin');
+  const fMin = document.getElementById('effFastMin');
+  nMin.classList.remove('better');
+  fMin.classList.remove('better');
+  const hint = document.getElementById('effHint');
+  if (eff.normal.perMin !== null && eff.fast.perMin !== null) {
+    if (eff.fast.perMin > eff.normal.perMin) {
+      fMin.classList.add('better');
+      hint.textContent = '⚡ 加速模式刷经验更快';
+    } else if (eff.normal.perMin > eff.fast.perMin) {
+      nMin.classList.add('better');
+      hint.textContent = '🏆 普通模式刷经验更快';
+    } else {
+      hint.textContent = '两种模式效率相当';
+    }
+  } else {
+    hint.textContent = '设置场均时长后可对比效率';
+  }
+
+  renderDailyStats();
+
+  const list = document.getElementById('historyList');
+  const todayStr = new Date().toDateString();
+  const todayRecords = data.history.filter(h => new Date(h.time).toDateString() === todayStr);
+
+  if (todayRecords.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--text2);padding:20px;font-size:13px;">暂无记录</div>';
+  } else {
+    const typeNames = { win: '普通胜利', lose: '普通失败', fast: '加速胜利', fastLose: '加速失败' };
+    const typeColors = { win: '#00d9a5', lose: '#ff7675', fast: '#a29bfe', fastLose: '#e17055' };
+    list.innerHTML = todayRecords.map(h => {
+      const d = new Date(h.time);
+      const timeStr = d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+      return `
+        <div class="history-item">
+          <div class="history-left">
+            <div class="history-dot" style="background:${typeColors[h.type] || '#fff'}"></div>
+            <div class="history-info">
+              <span class="history-type">${typeNames[h.type] || h.type}</span>
+              <span class="history-time">${timeStr}</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;">
+            <span class="history-exp pos">+${h.exp}</span>
+            <button class="history-del" onclick="deleteRecord(${h.id})">×</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function updateCountdown() {
+  const now = new Date();
+  const end = parseEndTime(data.endTime);
+  const el = document.getElementById('countdown');
+  const endLabel = document.getElementById('countdownEnd');
+  if (!end) {
+    el.textContent = '未设置截止时间';
+    el.style.color = 'var(--text2)';
+    endLabel.textContent = '请在"修改参数"中设置';
+    return;
+  }
+  const p = n => String(n).padStart(2, '0');
+  endLabel.textContent = `截止 ${end.getMonth() + 1}月${end.getDate()}日 ${p(end.getHours())}:${p(end.getMinutes())}`;
+  const diff = end - now;
+  if (diff <= 0) {
+    el.textContent = '活动已结束';
+    el.style.color = '#ff6b6b';
+    return;
+  }
+  el.style.color = '';
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  el.textContent = `${days}天 ${hours}时 ${mins}分`;
+}
+
+setInterval(updateCountdown, 60000);
+setInterval(() => { render(); }, 300000);
+
+render();
+updateCountdown();
+</script>
+</body>
+</html>
