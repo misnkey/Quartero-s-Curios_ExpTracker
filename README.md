@@ -1,4 +1,4 @@
-# 🎮 Quartero's Curios · EXP Tracker / 经验追踪器
+# 🎮 Quartero's Curios · EXP Tracker / 奇货郎任务经验追踪器
 
 [中文](#中文) · [English](#english)
 
