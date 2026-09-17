@@ -267,6 +267,44 @@ body {
   font-size: 13px;
 }
 
+/* Calendar */
+.cal-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+.cal-btn {
+  background: var(--card2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+}
+.cal-month { font-size: 13px; color: var(--text); font-weight: 600; min-width: 86px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-wd { font-size: 10px; color: var(--text2); text-align: center; padding: 4px 0; }
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  background: var(--card2);
+}
+.cal-cell.empty { background: transparent; }
+.cal-cell.today { outline: 2px solid var(--accent); outline-offset: -2px; }
+.cal-day { font-size: 12px; font-weight: 600; color: var(--text); }
+.cal-cell.has .cal-day { color: #fff; }
+.cal-count { font-size: 9px; color: rgba(255,255,255,0.85); font-weight: 700; }
+
 .history-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -473,7 +511,7 @@ body {
 <div class="container">
   <div class="header">
     <h1 data-i18n="title">🎮 经验追踪器</h1>
-    <div class="subtitle" id="headerSubtitle">初始: Lv.44 (0/1000) → 目标: Lv.100</div>
+    <div class="subtitle" id="headerSubtitle">初始: Lv.0 (0/1000) → 目标: Lv.100</div>
   </div>
 
   <div class="countdown-card">
@@ -574,6 +612,20 @@ body {
     </div>
   </div>
 
+  <!-- Calendar Board -->
+  <div class="cal-card">
+    <div class="daily-header">
+      <span class="daily-title" data-i18n="calTitle">📅 比赛日历</span>
+      <span class="cal-nav">
+        <button class="cal-btn" onclick="calNav(-1)">‹</button>
+        <span class="cal-month" id="calMonthLabel"></span>
+        <button class="cal-btn" onclick="calNav(1)">›</button>
+      </span>
+    </div>
+    <div class="cal-grid" id="calWeekdays"></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
   <div class="history-card">
     <div class="history-header">
       <span class="history-title" data-i18n="todayRecords">📜 今日记录</span>
@@ -592,7 +644,7 @@ body {
     <div class="form-row">
       <div class="form-group">
         <label data-i18n="lblCurrent">当前等级</label>
-        <input type="number" id="setCurrent" value="44">
+        <input type="number" id="setCurrent" value="0">
       </div>
       <div class="form-group">
         <label data-i18n="lblCurrentExp">当前等级内经验</label>
@@ -654,7 +706,7 @@ body {
 const STORAGE = 'expTrackerZero_v1';
 
 // 当前版本：每次发布新版本时修改这里，并同步记录到 exp-tracker-project-doc.md 的版本历史
-const VERSION = 'v1.0 · 2026-09-16';
+const VERSION = 'v1.2 · 2026-09-17';
 
 let data = loadData();
 
@@ -676,6 +728,7 @@ const I18N = {
     btnWin: '🏆 普通胜利', btnLose: '💔 普通失败', btnFast: '⚡ 加速胜利', btnFastLose: '🌀 加速失败',
     typeWin: '普通胜利', typeLose: '普通失败', typeFast: '加速胜利', typeFastLose: '加速失败',
     dailyStats: '📊 每日统计', dailyAvg: '日均需: ', noHistory: '暂无历史数据', today: '今日', gamesCount: '{n}场',
+    calTitle: '📅 比赛日历',
     todayRecords: '📜 今日记录', clearToday: '清空今日', noRecords: '暂无记录', clearedToday: '已清空今日记录',
     settings: '⚙️ 修改参数', lblCurrent: '当前等级', lblCurrentExp: '当前等级内经验',
     lblTarget: '目标等级', lblPerLevel: '每级经验', lblEndTime: '活动结束时间',
@@ -705,6 +758,7 @@ const I18N = {
     btnWin: '🏆 Win', btnLose: '💔 Loss', btnFast: '⚡ Turbo Win', btnFastLose: '🌀 Turbo Loss',
     typeWin: 'Win', typeLose: 'Loss', typeFast: 'Turbo Win', typeFastLose: 'Turbo Loss',
     dailyStats: '📊 Daily Stats', dailyAvg: 'Daily target: ', noHistory: 'No history yet', today: 'Today', gamesCount: '{n} games',
+    calTitle: '📅 Match Calendar',
     todayRecords: "📜 Today's Records", clearToday: 'Clear Today', noRecords: 'No records', clearedToday: "Today's records cleared",
     settings: '⚙️ Settings', lblCurrent: 'Current Level', lblCurrentExp: 'EXP in Current Level',
     lblTarget: 'Target Level', lblPerLevel: 'EXP per Level', lblEndTime: 'Event End Time',
@@ -734,6 +788,7 @@ const I18N = {
     btnWin: '🏆 Победа', btnLose: '💔 Поражение', btnFast: '⚡ Turbo победа', btnFastLose: '🌀 Turbo поражение',
     typeWin: 'Победа', typeLose: 'Поражение', typeFast: 'Turbo победа', typeFastLose: 'Turbo поражение',
     dailyStats: '📊 По дням', dailyAvg: 'Нужно в день: ', noHistory: 'Нет данных', today: 'Сегодня', gamesCount: '{n} игр',
+    calTitle: '📅 Календарь игр',
     todayRecords: '📜 Записи за сегодня', clearToday: 'Очистить', noRecords: 'Нет записей', clearedToday: 'Записи за сегодня удалены',
     settings: '⚙️ Настройки', lblCurrent: 'Текущий уровень', lblCurrentExp: 'Опыт в уровне',
     lblTarget: 'Целевой уровень', lblPerLevel: 'Опыта на уровень', lblEndTime: 'Конец события',
@@ -789,11 +844,11 @@ function loadData() {
     return d;
   }
   return {
-    startLevel: 44,
+    startLevel: 0,
     startExpInLevel: 0,
     targetLevel: 100,
     expPerLevel: 1000,
-    endTime: '2026-09-04T07:00',
+    endTime: '2026-12-04T07:00',
     expValues: { win: 650, lose: 250, fast: 425, fastLose: 175 },
     baseWinRate: 50,
     avgNormalMin: 40,
@@ -1043,6 +1098,57 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ==================== 比赛日历 ====================
+// 按月展示每日比赛场次，颜色深浅代表场次多少，周一为每周第一天
+const LOCALE_MAP = { 'zh-CN': 'zh-CN', 'en': 'en-US', 'ru': 'ru-RU' };
+let calCursor = new Date();
+calCursor.setDate(1);
+
+function calNav(delta) {
+  calCursor.setMonth(calCursor.getMonth() + delta);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const loc = LOCALE_MAP[LANG] || 'en-US';
+  const y = calCursor.getFullYear();
+  const m = calCursor.getMonth();
+  document.getElementById('calMonthLabel').textContent =
+    new Intl.DateTimeFormat(loc, { year: 'numeric', month: 'long' }).format(calCursor);
+
+  // 星期表头（2024-01-01 是周一）
+  let head = '';
+  for (let i = 0; i < 7; i++) {
+    head += '<div class="cal-wd">' + new Intl.DateTimeFormat(loc, { weekday: 'short' }).format(new Date(2024, 0, 1 + i)) + '</div>';
+  }
+  document.getElementById('calWeekdays').innerHTML = head;
+
+  // 统计当月每日场次
+  const map = {};
+  data.history.forEach(h => {
+    const d = new Date(h.time);
+    if (d.getFullYear() === y && d.getMonth() === m) {
+      map[d.getDate()] = (map[d.getDate()] || 0) + 1;
+    }
+  });
+
+  const startOffset = (new Date(y, m, 1).getDay() + 6) % 7; // 周一=0
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const maxCount = Math.max(1, ...Object.values(map));
+  const today = new Date();
+
+  let cells = '';
+  for (let i = 0; i < startOffset; i++) cells += '<div class="cal-cell empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const c = map[d] || 0;
+    const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
+    const alpha = c > 0 ? (0.15 + 0.55 * (c / maxCount)).toFixed(2) : 0;
+    cells += `<div class="cal-cell${c > 0 ? ' has' : ''}${isToday ? ' today' : ''}"${c > 0 ? ` style="background:rgba(0,212,255,${alpha})"` : ''}>` +
+      `<span class="cal-day">${d}</span>${c > 0 ? `<span class="cal-count">×${c}</span>` : ''}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+}
+
 function renderDailyStats() {
   const dailyMap = {};
   data.history.forEach(h => {
@@ -1160,6 +1266,7 @@ function render() {
   }
 
   renderDailyStats();
+  renderCalendar();
 
   const list = document.getElementById('historyList');
   const todayStr = new Date().toDateString();
